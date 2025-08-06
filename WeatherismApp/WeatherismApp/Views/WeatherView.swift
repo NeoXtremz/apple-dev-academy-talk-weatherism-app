@@ -21,6 +21,7 @@ struct WeatherView: View {
                 Text(viewModel.locationDisplayName)
                     .font(.title2)
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 2) // Added shadow for contrast
             }
             
             // Weather icon and description
@@ -32,6 +33,7 @@ struct WeatherView: View {
                 Text(viewModel.weatherDescription(for: weather.current.weatherCode))
                     .font(.title3)
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 2) // Added shadow for contrast
             }
             
             // Temperature
@@ -39,10 +41,12 @@ struct WeatherView: View {
                 Text("\(Int(weather.current.temperature2m))°C")
                     .font(.system(size: 72, weight: .thin))
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 2) // Added shadow for contrast
                 
                 Text("Feels like \(Int(weather.current.apparentTemperature))°C")
                     .font(.title3)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.white.opacity(0.9))
+                    .shadow(color: .black.opacity(0.3), radius: 2) // Added shadow for contrast
             }
             
             // Weather details
@@ -72,7 +76,7 @@ struct WeatherView: View {
                 )
             }
             .padding()
-            .background(Color.white.opacity(0.2))
+            .background(Color.black.opacity(0.3)) // Retained semi-transparent black background
             .cornerRadius(15)
         }
         .padding()
@@ -93,7 +97,7 @@ struct WeatherDetailView: View {
             
             Text(title)
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(.white.opacity(0.9))
             
             Text(value)
                 .font(.caption)

@@ -1,6 +1,6 @@
 - Tech Spec : <Feature Name>
-- Author : <Author Name>
-- Engineering Lead : <Eng Lead name>
+- Author : Thingkilia
+- Engineering Lead : Thingkilia
 - Product Specs : <Link to product specs, if any>
 - Important Documents : <Link to other important documents>
 - JIRA Epic : <Link to jira epic ticket>
