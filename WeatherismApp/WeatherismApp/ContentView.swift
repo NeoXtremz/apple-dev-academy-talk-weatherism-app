@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = WeatherViewModel()
     @State private var cityName = "London"
+    @State private var showingWeddingPlanner = false
     
     var body: some View {
         NavigationView {
@@ -35,6 +36,31 @@ struct ContentView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(viewModel.isLoading || cityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .padding(.horizontal)
+                    
+                    // Wedding Planner Button
+                    Button(action: {
+                        showingWeddingPlanner = true
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "heart.circle.fill")
+                                .font(.title2)
+                            Text("Plan Wedding Weather")
+                                .fontWeight(.medium)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 45)
+                        .background(
+                            LinearGradient(
+                                colors: [.pink.opacity(0.8), .purple.opacity(0.6)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(22.5)
+                        .shadow(color: .pink.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
                     .padding(.horizontal)
                     
@@ -85,6 +111,9 @@ struct ContentView: View {
             }
             .onAppear {
                 viewModel.searchWeather(for: cityName)
+            }
+            .sheet(isPresented: $showingWeddingPlanner) {
+                WeddingPlannerView()
             }
         }
     }

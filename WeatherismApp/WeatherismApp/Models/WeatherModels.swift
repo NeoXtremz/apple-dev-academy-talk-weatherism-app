@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - Weather Data Models
 struct WeatherResponse: Codable {
@@ -100,8 +101,6 @@ enum WeatherCondition: CaseIterable {
 }
 
 // MARK: - Weather Background Extension
-import SwiftUI
-
 extension WeatherCondition {
     var backgroundGradient: LinearGradient {
         switch self {
@@ -205,4 +204,62 @@ enum NetworkError: LocalizedError {
             return "City not found. Please check the spelling and try again."
         }
     }
+}
+
+// MARK: - Wedding Planning Models
+enum WeddingSuitability {
+    case perfect      // Clear, ideal conditions
+    case good        // Acceptable conditions
+    case risky       // Some weather concerns
+    case unsuitable  // Poor weather conditions
+    
+    var title: String {
+        switch self {
+        case .perfect: return "Perfect Wedding Weather! 💕"
+        case .good: return "Good Wedding Weather ✨"
+        case .risky: return "Weather Concerns ⚠️"
+        case .unsuitable: return "Not Ideal for Outdoor Wedding 🌧️"
+        }
+    }
+    
+    var message: String {
+        switch self {
+        case .perfect: return "The weather is absolutely perfect for your special day! Clear skies and comfortable temperatures await."
+        case .good: return "Great conditions for your wedding celebration! Some clouds but perfect for photos."
+        case .risky: return "Weather might pose some challenges. Consider having backup plans ready."
+        case .unsuitable: return "Outdoor conditions aren't ideal. We recommend alternative dates below."
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .perfect: return Color(red: 1.0, green: 0.8, blue: 0.9) // Soft pink
+        case .good: return Color(red: 0.9, green: 0.95, blue: 1.0) // Soft blue
+        case .risky: return Color(red: 1.0, green: 0.95, blue: 0.8) // Soft yellow
+        case .unsuitable: return Color(red: 0.95, green: 0.9, blue: 0.9) // Soft gray
+        }
+    }
+    
+    var iconName: String {
+        switch self {
+        case .perfect: return "heart.fill"
+        case .good: return "sun.max.fill"
+        case .risky: return "cloud.sun.fill"
+        case .unsuitable: return "cloud.rain.fill"
+        }
+    }
+}
+
+struct WeddingForecast {
+    let date: Date
+    let weather: WeatherResponse
+    let suitability: WeddingSuitability
+    let location: GeocodingResult
+}
+
+struct WeddingPlan {
+    let selectedDate: Date
+    let venue: String
+    let forecast: WeddingForecast?
+    let alternativeDates: [WeddingForecast]
 }
