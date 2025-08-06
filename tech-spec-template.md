@@ -1,6 +1,6 @@
-- Tech Spec : <Feature Name>
-- Author : <Author Name>
-- Engineering Lead : <Eng Lead name>
+- Tech Spec : Wedding Planner
+- Author : Lin Dan
+- Engineering Lead : Lin Dan
 - Product Specs : <Link to product specs, if any>
 - Important Documents : <Link to other important documents>
 - JIRA Epic : <Link to jira epic ticket>
@@ -14,7 +14,7 @@
 
 Project Overview
 =================
-<Why project created, some short summary is okay...>
+Sometimes couple that want to host a wedding find it difficult to plan an outdoor wedding. This apps will help the couples to find perfect day and time to host and outdoor wedding.
 
 
 Requirements
