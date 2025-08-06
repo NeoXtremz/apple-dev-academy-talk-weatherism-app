@@ -1,39 +1,63 @@
-- Tech Spec : <Feature Name>
-- Author : <Author Name>
-- Engineering Lead : <Eng Lead name>
-- Product Specs : <Link to product specs, if any>
-- Important Documents : <Link to other important documents>
-- JIRA Epic : <Link to jira epic ticket>
-- Figma : <Link to figma / design file> 
-- Figma Prototype : <Or protopie link...>
-- BE Tech Specs : <if BE have tech specs...>
-- Content Specs : <if need localization...>
-- Instrumentation Specs : <if need to track user action / data...>
-- QA Test Suite : <link to QA test suite>
-- PICs : <name of the PICs of function, ex: PIC BE, PIC PM, PIC Designer, PIC FE, QA, PA, TPM etc>
+# Weatherism - Technical Specification
 
-Project Overview
-=================
-<Why project created, some short summary is okay...>
+- **Tech Spec**: Outfit Recommendation Feature
+- **Author**: Regina Celine Adiwinata
+- **Engineering Lead**: 
+- **Product Specs**: 
+- **Important Documents**: 
+- **JIRA Epic**: 
+- **Figma**: 
+- **Figma Prototype**: 
+- **BE Tech Specs**: 
+- **Content Specs**: 
+- **Instrumentation Specs**: 
+- **QA Test Suite**: 
+- **PICs**: 
+  - PIC FE: Regina Celine Adiwinata
+  - PIC PM: 
+  - PIC Designer: 
+  - PIC BE: 
+  - PIC QA: 
+  - PIC PA: 
+  - PIC TPM: 
 
+---
 
-Requirements
-=================
-Functional Requirements
-- <list down requirement that needs to be there to create the feature. Ex: feature need to show certain component under certain condition>
+## Project Overview
+Penambahan fitur **Outfit Recommendation** pada aplikasi Weatherism untuk menampilkan saran pakaian yang sesuai dengan kondisi cuaca saat ini.  
+Data gambar diambil dari **Unsplash API** berdasarkan kondisi cuaca (cerah, hujan, berawan, salju, dsb).
 
-Non Functional Requirements
-- <some system requirements, ex: expected max CPU increase, FPS, etc>
+---
 
-High-Level Diagram 
-- <High level Flow chart>
+## Requirements
+
+### Functional Requirements
+- Mendapatkan kondisi cuaca saat ini dari `WeatherViewModel`.
+- Memetakan kondisi cuaca ke kata kunci pencarian yang sesuai.
+- Mengambil gambar dari **Unsplash API** berdasarkan kata kunci.
+- Menampilkan gambar outfit secara horizontal scroll di bawah informasi cuaca.
+
+### Non-Functional Requirements
+- Waktu load gambar outfit < 2 detik pada jaringan stabil.
+- Smooth scrolling pada list gambar.
+- Handling error API jika koneksi gagal atau data kosong.
+
+---
+
+## High-Level Diagram
 
 Low-Level Diagram
 - <Flow chart containing the service name etc, or swimlane stuffs>
 
 Code Structure & Implementation Details
 ========================================
-<Some pseudo-code on code-change plan and the logic>
+MVVM
+- **View**:  
+  - `OutfitListView` → Menampilkan list gambar outfit secara horizontal.  
+- **ViewModel**:  
+  - `OutfitViewModel` → Mengatur pemanggilan API Unsplash & mapping kondisi cuaca.  
+- **Service**:  
+  - `UnsplashService` → Menghandle request API Unsplash dan parsing JSON.  
 
 Operational Excellence
 =======================
@@ -53,12 +77,16 @@ Out of scope
 
 Demo
 ====
-<screenshot, screen record>
+![Unknown](https://github.com/user-attachments/assets/6f98218c-8880-44f5-8445-7d38d47e296d)
+
  
 
 Steps to use this feature
 ==========================
-<list down way to use this feature, ex: from which entry point, what to click, where to click, etc> 
+1. Open app.
+2. Enter a city name in the search bar.
+3. Tap "Search".
+4. View weather data & outfit recommendations.
 
 Discussions and Alignments
 ==========================
