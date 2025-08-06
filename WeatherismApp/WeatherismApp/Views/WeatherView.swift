@@ -1,10 +1,3 @@
-//
-//  WeatherView.swift
-//  WeatherismApp
-//
-//  Created by Agustinus Pongoh on 05/08/25.
-//
-
 import SwiftUI
 
 // MARK: - Weather View
@@ -18,9 +11,11 @@ struct WeatherView: View {
             HStack {
                 Image(systemName: "location")
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
                 Text(viewModel.locationDisplayName)
                     .font(.title2)
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
             }
             
             // Weather icon and description
@@ -28,10 +23,12 @@ struct WeatherView: View {
                 Image(systemName: viewModel.weatherIconName(for: weather.current.weatherCode))
                     .font(.system(size: 80))
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
                 
                 Text(viewModel.weatherDescription(for: weather.current.weatherCode))
                     .font(.title3)
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
             }
             
             // Temperature
@@ -39,10 +36,12 @@ struct WeatherView: View {
                 Text("\(Int(weather.current.temperature2m))°C")
                     .font(.system(size: 72, weight: .thin))
                     .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 2)
                 
                 Text("Feels like \(Int(weather.current.apparentTemperature))°C")
                     .font(.title3)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.white.opacity(0.95))
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
             }
             
             // Weather details
@@ -72,7 +71,7 @@ struct WeatherView: View {
                 )
             }
             .padding()
-            .background(Color.white.opacity(0.2))
+            .background(Color.black.opacity(0.3))
             .cornerRadius(15)
         }
         .padding()
@@ -90,100 +89,18 @@ struct WeatherDetailView: View {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(.white)
+                .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 1)
             
             Text(title)
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(.white.opacity(0.9))
+                .shadow(color: .black.opacity(0.6), radius: 1, x: 0, y: 1)
             
             Text(value)
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
+                .shadow(color: .black.opacity(0.6), radius: 1, x: 0, y: 1)
         }
     }
-}
-
-// MARK: - Preview
-#Preview("Sunny Weather") {
-    let sunnyWeather = WeatherResponse(
-        current: CurrentWeather(
-            time: "2024-01-01T12:00",
-            temperature2m: 22.5,
-            relativeHumidity2m: 65,
-            apparentTemperature: 24.0,
-            windSpeed10m: 10.5,
-            windDirection10m: 180.0,
-            weatherCode: 0 // Clear sky
-        ),
-        daily: DailyWeather(
-            time: ["2024-01-01"],
-            temperature2mMax: [25.0],
-            temperature2mMin: [18.0]
-        ),
-        hourly: HourlyWeather(
-            time: ["2024-01-01T12:00"],
-            temperature2m: [22.5]
-        )
-    )
-    
-    let sampleViewModel = WeatherViewModel()
-    
-    WeatherView(weather: sunnyWeather, viewModel: sampleViewModel)
-        .background(WeatherCondition.clear.backgroundGradient)
-}
-
-#Preview("Rainy Weather") {
-    let rainyWeather = WeatherResponse(
-        current: CurrentWeather(
-            time: "2024-01-01T12:00",
-            temperature2m: 15.0,
-            relativeHumidity2m: 85,
-            apparentTemperature: 13.0,
-            windSpeed10m: 15.0,
-            windDirection10m: 270.0,
-            weatherCode: 61 // Rain
-        ),
-        daily: DailyWeather(
-            time: ["2024-01-01"],
-            temperature2mMax: [18.0],
-            temperature2mMin: [12.0]
-        ),
-        hourly: HourlyWeather(
-            time: ["2024-01-01T12:00"],
-            temperature2m: [15.0]
-        )
-    )
-    
-    let sampleViewModel = WeatherViewModel()
-    
-    WeatherView(weather: rainyWeather, viewModel: sampleViewModel)
-        .background(WeatherCondition.rainy.backgroundGradient)
-}
-
-#Preview("Snowy Weather") {
-    let snowyWeather = WeatherResponse(
-        current: CurrentWeather(
-            time: "2024-01-01T12:00",
-            temperature2m: -2.0,
-            relativeHumidity2m: 90,
-            apparentTemperature: -5.0,
-            windSpeed10m: 20.0,
-            windDirection10m: 90.0,
-            weatherCode: 71 // Snow
-        ),
-        daily: DailyWeather(
-            time: ["2024-01-01"],
-            temperature2mMax: [1.0],
-            temperature2mMin: [-5.0]
-        ),
-        hourly: HourlyWeather(
-            time: ["2024-01-01T12:00"],
-            temperature2m: [-2.0]
-        )
-    )
-    
-    let sampleViewModel = WeatherViewModel()
-    
-    WeatherView(weather: snowyWeather, viewModel: sampleViewModel)
-        .background(WeatherCondition.snowy.backgroundGradient)
 }
