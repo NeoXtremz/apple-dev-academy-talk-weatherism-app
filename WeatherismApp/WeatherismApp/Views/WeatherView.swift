@@ -13,71 +13,110 @@ struct WeatherView: View {
     let viewModel: WeatherViewModel
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Location
-            HStack {
-                Image(systemName: "location")
-                    .foregroundColor(.white)
-                Text(viewModel.locationDisplayName)
-                    .font(.title2)
-                    .foregroundColor(.white)
-            }
-            
-            // Weather icon and description
-            VStack(spacing: 10) {
-                Image(systemName: viewModel.weatherIconName(for: weather.current.weatherCode))
-                    .font(.system(size: 80))
-                    .foregroundColor(.white)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Location
+                HStack {
+                    Image(systemName: "location")
+                        .foregroundColor(.white)
+                    Text(viewModel.locationDisplayName)
+                        .font(.title2)
+                        .foregroundColor(.white)
+                }
                 
-                Text(viewModel.weatherDescription(for: weather.current.weatherCode))
-                    .font(.title3)
-                    .foregroundColor(.white)
-            }
-            
-            // Temperature
-            VStack(spacing: 5) {
-                Text("\(Int(weather.current.temperature2m))°C")
-                    .font(.system(size: 72, weight: .thin))
-                    .foregroundColor(.white)
+                // Weather icon and description
+                VStack(spacing: 8) {
+                    Image(systemName: viewModel.weatherIconName(for: weather.current.weatherCode))
+                        .font(.system(size: 80))
+                        .foregroundColor(.white)
+                    
+                    Text(viewModel.weatherDescription(for: weather.current.weatherCode))
+                        .font(.title3)
+                        .foregroundColor(.white)
+                }
                 
-                Text("Feels like \(Int(weather.current.apparentTemperature))°C")
-                    .font(.title3)
-                    .foregroundColor(.white.opacity(0.8))
-            }
-            
-            // Weather details
-            HStack(spacing: 20) {
-                WeatherDetailView(
-                    icon: "thermometer.low",
-                    title: "Min",
-                    value: "\(Int(weather.daily.temperature2mMin.first ?? 0))°C"
-                )
+                // Temperature
+                VStack(spacing: 5) {
+                    Text("\(Int(weather.current.temperature2m))°C")
+                        .font(.system(size: 62, weight: .thin))
+                        .foregroundColor(.white)
+                    
+                    Text("Feels like \(Int(weather.current.apparentTemperature))°C")
+                        .font(.title3)
+                        .foregroundColor(.white.opacity(0.8))
+                }
                 
-                WeatherDetailView(
-                    icon: "thermometer.high",
-                    title: "Max",
-                    value: "\(Int(weather.daily.temperature2mMax.first ?? 0))°C"
-                )
+                // Weather details
+                HStack(spacing: 20) {
+                    WeatherDetailView(
+                        icon: "thermometer.low",
+                        title: "Min",
+                        value: "\(Int(weather.daily.temperature2mMin.first ?? 0))°C"
+                    )
+                    
+                    WeatherDetailView(
+                        icon: "thermometer.high",
+                        title: "Max",
+                        value: "\(Int(weather.daily.temperature2mMax.first ?? 0))°C"
+                    )
+                    
+                    WeatherDetailView(
+                        icon: "humidity",
+                        title: "Humidity",
+                        value: "\(weather.current.relativeHumidity2m)%"
+                    )
+                    
+                    WeatherDetailView(
+                        icon: "wind",
+                        title: "Wind",
+                        value: "\(String(format: "%.1f", weather.current.windSpeed10m)) km/h"
+                    )
+                }
+                .padding()
+                .background(Color.white.opacity(0.2))
+                .cornerRadius(15)
                 
-                WeatherDetailView(
-                    icon: "humidity",
-                    title: "Humidity",
-                    value: "\(weather.current.relativeHumidity2m)%"
-                )
-                
-                WeatherDetailView(
-                    icon: "wind",
-                    title: "Wind",
-                    value: "\(String(format: "%.1f", weather.current.windSpeed10m)) km/h"
-                )
+                // MARK: - What to Bring Section
+                if let weather = viewModel.weatherData?.current {
+                    let recommendations = viewModel.recommendedItems(for: weather.weatherCode, temperature: weather.temperature2m)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "backpack.fill")
+                            Text("What to Bring")
+                                .font(.headline)
+                        }
+                        .foregroundColor(.white)
+                        
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
+                            ForEach(recommendations) { item in
+                                HStack(spacing: 8) {
+                                    Image(systemName: item.icon)
+                                        .foregroundColor(.blue)
+                                    Text(item.name)
+                                        .foregroundColor(.white)
+                                        .font(.subheadline)
+                                        .lineLimit(1)
+                                }
+                                .padding(8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(12)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(16)
+                }
             }
             .padding()
-            .background(Color.white.opacity(0.2))
-            .cornerRadius(15)
+            
+            
         }
-        .padding()
     }
 }
+            
 
 // MARK: - Weather Detail View
 struct WeatherDetailView: View {

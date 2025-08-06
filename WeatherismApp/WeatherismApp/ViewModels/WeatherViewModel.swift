@@ -152,4 +152,81 @@ class WeatherViewModel: ObservableObject {
         default: return .clear
         }
     }
+    
+    // MARK: - Recommendation Helper
+    func recommendedItems(for weatherCode: Int, temperature: Double?) -> [RecommendationItem] {
+        var items: [RecommendationItem] = []
+
+        // Temperature-based recommendations
+        if let temp = temperature {
+            switch temp {
+            case ..<5:
+                items.append(contentsOf: [
+                    .init(name: "Winter coat", icon: "thermometer.snowflake"),
+                    .init(name: "Gloves", icon: "hand.raised.fill"),
+                    .init(name: "Scarf", icon: "scarf"),
+                    .init(name: "Beanie", icon: "wind.snow")
+                ])
+            case 5..<15:
+                items.append(contentsOf: [
+                    .init(name: "Jacket", icon: "cloud.bolt.rain.fill"),
+                    .init(name: "Sweater", icon: "tshirt.fill")
+                ])
+            case 15..<25:
+                items.append(.init(name: "Light jacket or long sleeves", icon: "tshirt"))
+            case 25...:
+                items.append(.init(name: "T-shirt or short sleeves", icon: "sun.max.fill"))
+            default:
+                break
+            }
+        }
+
+        // Weather condition-based recommendations
+        switch weatherCode {
+        case 0:
+            items.append(contentsOf: [
+                .init(name: "Sunglasses", icon: "eyeglasses"),
+                .init(name: "Sunscreen", icon: "sun.max.circle")
+            ])
+        case 1, 2:
+            items.append(.init(name: "Cap or hat", icon: "figure.walk"))
+        case 3:
+            items.append(.init(name: "Light jacket", icon: "cloud.fill"))
+        case 45, 48:
+            items.append(.init(name: "Drive carefully (low visibility)", icon: "car.fill"))
+        case 51, 53, 55, 56, 57:
+            items.append(contentsOf: [
+                .init(name: "Umbrella or raincoat", icon: "umbrella.fill")
+            ])
+        case 61, 63, 65, 66, 67, 80, 81, 82:
+            items.append(contentsOf: [
+                .init(name: "Umbrella", icon: "umbrella.fill"),
+                .init(name: "Waterproof shoes", icon: "shoeprints.fill"),
+                .init(name: "Raincoat", icon: "cloud.rain.fill")
+            ])
+        case 71, 73, 75, 77, 85, 86:
+            items.append(contentsOf: [
+                .init(name: "Winter boots", icon: "snowflake"),
+                .init(name: "Gloves", icon: "hand.raised.fill"),
+                .init(name: "Snow jacket", icon: "cloud.snow.fill")
+            ])
+        case 95, 96, 99:
+            items.append(contentsOf: [
+                .init(name: "Stay indoors if possible", icon: "house.fill"),
+                .init(name: "Emergency flashlight", icon: "flashlight.on.fill"),
+                .init(name: "Portable charger", icon: "battery.100.bolt")
+            ])
+        default:
+            items.append(.init(name: "Check local advisory", icon: "questionmark.circle"))
+        }
+
+        return items
+    }
+
+}
+
+struct RecommendationItem: Identifiable {
+    let id = UUID()
+    let name: String
+    let icon: String // SF Symbol name
 }

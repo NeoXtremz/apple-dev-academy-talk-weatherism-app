@@ -283,4 +283,63 @@ final class WeatherViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.hasError)
         XCTAssertFalse(viewModel.isLoading)
     }
+    
+    // MARK: - Recommendation Item Tests
+    func testRecommendationItemsSunnyAndHot() {
+        let weatherCode = 0 // Clear sky
+        let temperature = 30.0
+
+        let items = viewModel.recommendedItems(for: weatherCode, temperature: temperature)
+
+        let names = items.map { $0.name }
+        let icons = items.map { $0.icon }
+
+        XCTAssertTrue(names.contains("Sunglasses"))
+        XCTAssertTrue(names.contains("Water Bottle"))
+        XCTAssertTrue(icons.contains("sun.max"))
+        XCTAssertTrue(icons.contains("drop"))
+    }
+
+    func testRecommendationItemsRainyAndCool() {
+        let weatherCode = 61 // Rainy
+        let temperature = 18.0
+
+        let items = viewModel.recommendedItems(for: weatherCode, temperature: temperature)
+
+        let names = items.map { $0.name }
+        XCTAssertTrue(names.contains("Umbrella"))
+        XCTAssertTrue(names.contains("Raincoat"))
+    }
+
+    func testRecommendationItemsSnowyAndCold() {
+        let weatherCode = 71 // Snow
+        let temperature = -5.0
+
+        let items = viewModel.recommendedItems(for: weatherCode, temperature: temperature)
+
+        let names = items.map { $0.name }
+        XCTAssertTrue(names.contains("Winter Jacket"))
+        XCTAssertTrue(names.contains("Gloves"))
+        XCTAssertTrue(names.contains("Scarf"))
+    }
+
+    func testRecommendationItemsUnknownWeatherCode() {
+        let weatherCode = 999 // Unknown
+        let temperature = 20.0
+
+        let items = viewModel.recommendedItems(for: weatherCode, temperature: temperature)
+
+        XCTAssertTrue(items.isEmpty || items.count < 3) // Should be minimal or none
+    }
+
+    func testRecommendationItemsNilTemperature() {
+        let weatherCode = 0
+        let temperature: Double? = nil
+
+        let items = viewModel.recommendedItems(for: weatherCode, temperature: temperature)
+
+        // Should not crash and possibly return default items
+        XCTAssertNotNil(items)
+    }
+
 }
