@@ -20,24 +20,45 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .animation(.easeInOut(duration: 1.0), value: viewModel.currentWeatherCondition)
                 
-                VStack(spacing: 20) {
-                    // Search bar
-                    HStack {
-                        TextField("Enter city name", text: $cityName)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .onSubmit {
+                VStack(spacing: 0) { // Set spacing to 0 to have suggestions appear right below the search bar
+                    
+                    // Search Bar and Suggestions
+                    VStack {
+                        HStack {
+                            TextField("Enter city name", text: $cityName)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .onSubmit {
+                                    viewModel.searchWeather(for: cityName)
+                                }
+                                .submitLabel(.search)
+                            
+                            Button("Search") {
                                 viewModel.searchWeather(for: cityName)
                             }
-                            .submitLabel(.search)
-                        
-                        Button("Search") {
-                            viewModel.searchWeather(for: cityName)
+                            .buttonStyle(.borderedProminent)
+                            .disabled(viewModel.isLoading || cityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(viewModel.isLoading || cityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        
+                        // --- SUGGESTIONS LIST ---
+                        if !viewModel.citySuggestions.isEmpty {
+                            List(viewModel.citySuggestions, id: \.name) { suggestion in
+                                Button(action: {
+                                    // Set city name, clear suggestions, and search
+                                    self.cityName = "\(suggestion.name)"
+                                    viewModel.searchWeather(for: self.cityName)
+                                }) {
+                                    Text("\(suggestion.name), \(suggestion.country)")
+                                }
+                            }
+                            .listStyle(.plain)
+                            .frame(height: 150) // Limit the height of the suggestions list
+                            .cornerRadius(10)
+                        }
                     }
                     .padding(.horizontal)
+                    .padding(.bottom, 20) // Add padding to separate from content below
                     
+                    // Main Content
                     if viewModel.isLoading {
                         ProgressView("Loading weather...")
                             .foregroundColor(.white)
@@ -68,7 +89,7 @@ struct ContentView: View {
                     
                     Spacer()
                 }
-                .padding()
+                .padding(.top)
             }
             .navigationTitle("Weatherism")
             .navigationBarTitleDisplayMode(.large)
@@ -84,7 +105,13 @@ struct ContentView: View {
                 }
             }
             .onAppear {
-                viewModel.searchWeather(for: cityName)
+                if viewModel.weatherData == nil { // Only search on first appear
+                    viewModel.searchWeather(for: cityName)
+                }
+            }
+            .onChange(of: cityName) { newValue in
+                // Update suggestions whenever the text field changes
+                viewModel.updateCitySuggestions(for: newValue)
             }
         }
     }

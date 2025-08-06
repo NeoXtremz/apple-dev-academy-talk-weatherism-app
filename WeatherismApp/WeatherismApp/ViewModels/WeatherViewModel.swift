@@ -6,150 +6,148 @@
 //
 
 import Foundation
+import SwiftUI
+import Combine
 
-// MARK: - Weather ViewModel
+// MARK: - Weather View Model
 @MainActor
 class WeatherViewModel: ObservableObject {
+    
     // MARK: - Published Properties
     @Published var weatherData: WeatherResponse?
-    @Published var currentLocation: GeocodingResult?
-    @Published var isLoading = false
+    @Published var locationDisplayName: String = ""
+    @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-    
-    // MARK: - Dependencies
-    private let weatherService: WeatherServiceProtocol
-    
-    // MARK: - Initialization
-    init(weatherService: WeatherServiceProtocol = WeatherService()) {
-        self.weatherService = weatherService
-    }
-    
-    // MARK: - Public Methods
-    func searchWeather(for city: String) {
-        let trimmedCity = city.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedCity.isEmpty else {
-            errorMessage = "Please enter a city name"
-            return
-        }
-        
-        Task {
-            await fetchWeather(for: trimmedCity)
-        }
-    }
-    
-    func refreshWeather() {
-        guard let location = currentLocation else { return }
-        Task {
-            await fetchWeather(for: location.name)
-        }
-    }
-    
-    // MARK: - Private Methods
-    private func fetchWeather(for city: String) async {
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            let (weather, location) = try await weatherService.fetchWeather(for: city)
-            
-            weatherData = weather
-            currentLocation = location
-        } catch {
-            errorMessage = error.localizedDescription
-            weatherData = nil
-            currentLocation = nil
-        }
-        
-        isLoading = false
-    }
-    
-    // MARK: - Helper Methods
-    func weatherIconName(for weatherCode: Int) -> String {
-        switch weatherCode {
-        case 0: return "sun.max" // Clear sky
-        case 1, 2, 3: return "cloud.sun" // Mainly clear, partly cloudy, and overcast
-        case 45, 48: return "cloud.fog" // Fog and depositing rime fog
-        case 51, 53, 55: return "cloud.drizzle" // Drizzle: Light, moderate, and dense intensity
-        case 56, 57: return "cloud.sleet" // Freezing Drizzle: Light and dense intensity
-        case 61, 63, 65: return "cloud.rain" // Rain: Slight, moderate and heavy intensity
-        case 66, 67: return "cloud.sleet" // Freezing Rain: Light and heavy intensity
-        case 71, 73, 75: return "cloud.snow" // Snow fall: Slight, moderate, and heavy intensity
-        case 77: return "cloud.snow" // Snow grains
-        case 80, 81, 82: return "cloud.heavyrain" // Rain showers: Slight, moderate, and violent
-        case 85, 86: return "cloud.snow" // Snow showers slight and heavy
-        case 95: return "cloud.bolt" // Thunderstorm: Slight or moderate
-        case 96, 99: return "cloud.bolt.rain" // Thunderstorm with slight and heavy hail
-        default: return "sun.max"
-        }
-    }
-    
-    func weatherDescription(for weatherCode: Int) -> String {
-        switch weatherCode {
-        case 0: return "Clear sky"
-        case 1: return "Mainly clear"
-        case 2: return "Partly cloudy"
-        case 3: return "Overcast"
-        case 45: return "Fog"
-        case 48: return "Depositing rime fog"
-        case 51: return "Light drizzle"
-        case 53: return "Moderate drizzle"
-        case 55: return "Dense drizzle"
-        case 56: return "Light freezing drizzle"
-        case 57: return "Dense freezing drizzle"
-        case 61: return "Slight rain"
-        case 63: return "Moderate rain"
-        case 65: return "Heavy rain"
-        case 66: return "Light freezing rain"
-        case 67: return "Heavy freezing rain"
-        case 71: return "Slight snow fall"
-        case 73: return "Moderate snow fall"
-        case 75: return "Heavy snow fall"
-        case 77: return "Snow grains"
-        case 80: return "Slight rain showers"
-        case 81: return "Moderate rain showers"
-        case 82: return "Violent rain showers"
-        case 85: return "Slight snow showers"
-        case 86: return "Heavy snow showers"
-        case 95: return "Thunderstorm"
-        case 96: return "Thunderstorm with slight hail"
-        case 99: return "Thunderstorm with heavy hail"
-        default: return "Unknown weather"
-        }
-    }
-    
+    @Published var citySuggestions: [GeocodingResult] = []
+
     // MARK: - Computed Properties
-    var hasWeatherData: Bool {
-        weatherData != nil
-    }
-    
     var hasError: Bool {
         errorMessage != nil
     }
     
-    var locationDisplayName: String {
-        guard let location = currentLocation else { return "Unknown" }
-        return "\(location.name), \(location.country)"
+    var hasWeatherData: Bool {
+        weatherData != nil
     }
     
     var currentWeatherCondition: WeatherCondition {
-        guard let weatherCode = weatherData?.current.weatherCode else {
-            return .clear
-        }
-        return weatherCondition(for: weatherCode)
+        guard let code = weatherData?.current.weatherCode else { return .clear }
+        return weatherCondition(for: code)
     }
     
-    // MARK: - Weather Condition Logic
-    func weatherCondition(for weatherCode: Int) -> WeatherCondition {
-        switch weatherCode {
-        case 0: return .clear // Clear sky
-        case 1, 2: return .partlyCloudy // Mainly clear, partly cloudy
-        case 3: return .cloudy // Overcast
-        case 45, 48: return .foggy // Fog
-        case 51, 53, 55, 56, 57: return .drizzle // Drizzle
-        case 61, 63, 65, 66, 67, 80, 81, 82: return .rainy // Rain
-        case 71, 73, 75, 77, 85, 86: return .snowy // Snow
-        case 95, 96, 99: return .stormy // Thunderstorm
-        default: return .clear
+    // MARK: - Private Properties
+    private let weatherService: WeatherServiceProtocol
+    private var lastSearchedCity: String?
+    private var searchCancellable: AnyCancellable?
+    private let searchSubject = PassthroughSubject<String, Never>()
+
+    // MARK: - Initializer
+    init(weatherService: WeatherServiceProtocol = WeatherService()) {
+        self.weatherService = weatherService
+        
+        // Debounce logic for search suggestions
+        searchCancellable = searchSubject
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] query in
+                self?.fetchCitySuggestions(for: query)
+            }
+    }
+    
+    // MARK: - Public Methods
+    
+    /// Triggers the process to update city suggestions based on the query.
+    func updateCitySuggestions(for query: String) {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            self.citySuggestions = []
+            return
+        }
+        searchSubject.send(query)
+    }
+    
+    /// Fetches weather for a given city name.
+    func searchWeather(for city: String) {
+        let trimmedCity = city.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedCity.isEmpty else { return }
+        
+        lastSearchedCity = trimmedCity
+        isLoading = true
+        errorMessage = nil
+        citySuggestions = [] // Clear suggestions when a search is initiated
+        
+        Task {
+            do {
+                let (weatherResponse, location) = try await weatherService.fetchWeather(for: trimmedCity)
+                self.weatherData = weatherResponse
+                self.locationDisplayName = "\(location.name), \(location.countryCode)"
+            } catch let networkError as NetworkError {
+                self.errorMessage = networkError.localizedDescription
+            } catch {
+                self.errorMessage = "An unexpected error occurred: \(error.localizedDescription)"
+            }
+            isLoading = false
+        }
+    }
+    
+    /// Refreshes the weather for the last searched city.
+    func refreshWeather() {
+        guard let city = lastSearchedCity else { return }
+        searchWeather(for: city)
+    }
+
+    /// Provides a user-friendly description for a given weather code.
+    func weatherDescription(for code: Int) -> String {
+        return weatherCondition(for: code).displayName
+    }
+    
+    /// Provides an SFSymbol icon name for a given weather code.
+    func weatherIconName(for code: Int) -> String {
+        switch weatherCondition(for: code) {
+        case .clear: return "sun.max.fill"
+        case .partlyCloudy: return "cloud.sun.fill"
+        case .cloudy: return "cloud.fill"
+        case .foggy: return "cloud.fog.fill"
+        case .drizzle: return "cloud.drizzle.fill"
+        case .rainy: return "cloud.rain.fill"
+        case .snowy: return "cloud.snow.fill"
+        case .stormy: return "cloud.bolt.rain.fill"
+        }
+    }
+    
+    // MARK: - Private Methods
+
+    /// Fetches a list of city suggestions from the weather service.
+    private func fetchCitySuggestions(for query: String) {
+        Task {
+            // We only show suggestions if the query is not empty.
+            guard !query.isEmpty else {
+                self.citySuggestions = []
+                return
+            }
+            
+            do {
+                // Assuming the service can fetch suggestions. This needs to be added to WeatherService.
+                if let service = weatherService as? WeatherService {
+                    self.citySuggestions = try await service.fetchCitySuggestions(for: query)
+                }
+            } catch {
+                // Silently fail or log the error, as we don't want to show an error for suggestions.
+                print("Failed to fetch city suggestions: \(error.localizedDescription)")
+                self.citySuggestions = []
+            }
+        }
+    }
+    
+    /// Maps a WMO weather code to a `WeatherCondition`.
+    private func weatherCondition(for code: Int) -> WeatherCondition {
+        switch code {
+        case 0: return .clear
+        case 1, 2, 3: return .partlyCloudy
+        case 45, 48: return .foggy
+        case 51, 53, 55, 56, 57: return .drizzle
+        case 61, 63, 65, 66, 67, 80, 81, 82: return .rainy
+        case 71, 73, 75, 77, 85, 86: return .snowy
+        case 95, 96, 99: return .stormy
+        default: return .cloudy
         }
     }
 }

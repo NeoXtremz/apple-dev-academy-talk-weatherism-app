@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - Weather Data Models
 struct WeatherResponse: Codable {
@@ -22,7 +23,7 @@ struct CurrentWeather: Codable {
     let windSpeed10m: Double
     let windDirection10m: Double
     let weatherCode: Int
-    
+
     enum CodingKeys: String, CodingKey {
         case time
         case temperature2m = "temperature_2m"
@@ -38,7 +39,7 @@ struct DailyWeather: Codable {
     let time: [String]
     let temperature2mMax: [Double]
     let temperature2mMin: [Double]
-    
+
     enum CodingKeys: String, CodingKey {
         case time
         case temperature2mMax = "temperature_2m_max"
@@ -49,7 +50,7 @@ struct DailyWeather: Codable {
 struct HourlyWeather: Codable {
     let time: [String]
     let temperature2m: [Double]
-    
+
     enum CodingKeys: String, CodingKey {
         case time
         case temperature2m = "temperature_2m"
@@ -61,18 +62,21 @@ struct GeocodingResponse: Codable {
     let results: [GeocodingResult]?
 }
 
-struct GeocodingResult: Codable {
+// REVISED: GeocodingResult is now Identifiable and includes the 'id' field from the API.
+struct GeocodingResult: Codable, Identifiable {
+    let id: Int
     let name: String
     let latitude: Double
     let longitude: Double
     let country: String
     let countryCode: String
-    
+
     enum CodingKeys: String, CodingKey {
-        case name, latitude, longitude, country
+        case id, name, latitude, longitude, country
         case countryCode = "country_code"
     }
 }
+
 
 // MARK: - Weather Condition Types
 enum WeatherCondition: CaseIterable {
@@ -84,7 +88,7 @@ enum WeatherCondition: CaseIterable {
     case rainy
     case snowy
     case stormy
-    
+
     var displayName: String {
         switch self {
         case .clear: return "Clear"
@@ -100,8 +104,6 @@ enum WeatherCondition: CaseIterable {
 }
 
 // MARK: - Weather Background Extension
-import SwiftUI
-
 extension WeatherCondition {
     var backgroundGradient: LinearGradient {
         switch self {
@@ -194,7 +196,7 @@ enum NetworkError: LocalizedError {
     case invalidURL
     case noData
     case cityNotFound
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidURL:
