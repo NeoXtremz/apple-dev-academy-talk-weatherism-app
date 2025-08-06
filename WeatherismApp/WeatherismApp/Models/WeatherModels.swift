@@ -22,6 +22,13 @@ struct CurrentWeather: Codable {
     let windSpeed10m: Double
     let windDirection10m: Double
     let weatherCode: Int
+    let uvIndex: Double?
+    let pm25: Double?
+    let pm10: Double?
+    let carbonMonoxide: Double?
+    let nitrogenDioxide: Double?
+    let sulphurDioxide: Double?
+    let ozone: Double?
     
     enum CodingKeys: String, CodingKey {
         case time
@@ -31,6 +38,13 @@ struct CurrentWeather: Codable {
         case windSpeed10m = "wind_speed_10m"
         case windDirection10m = "wind_direction_10m"
         case weatherCode = "weather_code"
+        case uvIndex = "uv_index"
+        case pm25 = "pm2_5"
+        case pm10 = "pm10"
+        case carbonMonoxide = "carbon_monoxide"
+        case nitrogenDioxide = "nitrogen_dioxide"
+        case sulphurDioxide = "sulphur_dioxide"
+        case ozone
     }
 }
 
@@ -38,11 +52,13 @@ struct DailyWeather: Codable {
     let time: [String]
     let temperature2mMax: [Double]
     let temperature2mMin: [Double]
+    let uvIndexMax: [Double]?
     
     enum CodingKeys: String, CodingKey {
         case time
         case temperature2mMax = "temperature_2m_max"
         case temperature2mMin = "temperature_2m_min"
+        case uvIndexMax = "uv_index_max"
     }
 }
 
@@ -71,6 +87,150 @@ struct GeocodingResult: Codable {
     enum CodingKeys: String, CodingKey {
         case name, latitude, longitude, country
         case countryCode = "country_code"
+    }
+}
+
+// MARK: - Air Quality Models
+struct AirQualityResponse: Codable {
+    let current: CurrentAirQuality
+}
+
+struct CurrentAirQuality: Codable {
+    let pm25: Double?
+    let pm10: Double?
+    let carbonMonoxide: Double?
+    let nitrogenDioxide: Double?
+    let sulphurDioxide: Double?
+    let ozone: Double?
+    
+    enum CodingKeys: String, CodingKey {
+        case pm25 = "pm2_5"
+        case pm10 = "pm10"
+        case carbonMonoxide = "carbon_monoxide"
+        case nitrogenDioxide = "nitrogen_dioxide"
+        case sulphurDioxide = "sulphur_dioxide"
+        case ozone
+    }
+}
+
+// MARK: - UV Index Helper
+enum UVIndexLevel {
+    case low
+    case moderate
+    case high
+    case veryHigh
+    case extreme
+    
+    init(uvIndex: Double) {
+        switch uvIndex {
+        case 0...2:
+            self = .low
+        case 3...5:
+            self = .moderate
+        case 6...7:
+            self = .high
+        case 8...10:
+            self = .veryHigh
+        default:
+            self = .extreme
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .low: return "Low"
+        case .moderate: return "Moderate"
+        case .high: return "High"
+        case .veryHigh: return "Very High"
+        case .extreme: return "Extreme"
+        }
+    }
+    
+    var warning: String? {
+        switch self {
+        case .low, .moderate:
+            return nil
+        case .high:
+            return "Wear sunscreen and protective clothing ☀️"
+        case .veryHigh:
+            return "Avoid sun exposure between 10 AM - 4 PM 🧴"
+        case .extreme:
+            return "Stay indoors! Dangerous UV levels ⚠️"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .low: return "green"
+        case .moderate: return "yellow"
+        case .high: return "orange"
+        case .veryHigh: return "red"
+        case .extreme: return "purple"
+        }
+    }
+}
+
+// MARK: - Air Quality Helper
+enum AirQualityLevel {
+    case good
+    case moderate
+    case unhealthyForSensitive
+    case unhealthy
+    case veryUnhealthy
+    case hazardous
+    
+    init(pm25: Double) {
+        switch pm25 {
+        case 0...12:
+            self = .good
+        case 13...35:
+            self = .moderate
+        case 36...55:
+            self = .unhealthyForSensitive
+        case 56...150:
+            self = .unhealthy
+        case 151...250:
+            self = .veryUnhealthy
+        default:
+            self = .hazardous
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .good: return "Good"
+        case .moderate: return "Moderate"
+        case .unhealthyForSensitive: return "Unhealthy for Sensitive Groups"
+        case .unhealthy: return "Unhealthy"
+        case .veryUnhealthy: return "Very Unhealthy"
+        case .hazardous: return "Hazardous"
+        }
+    }
+    
+    var warning: String? {
+        switch self {
+        case .good, .moderate:
+            return nil
+        case .unhealthyForSensitive:
+            return "Sensitive people should limit outdoor activities 😷"
+        case .unhealthy:
+            return "Everyone should limit outdoor activities 🚫"
+        case .veryUnhealthy:
+            return "Avoid outdoor activities! 🏠"
+        case .hazardous:
+            return "Emergency conditions! Stay indoors! ⚠️"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .good: return "green"
+        case .moderate: return "yellow"
+        case .unhealthyForSensitive: return "orange"
+        case .unhealthy: return "red"
+        case .veryUnhealthy: return "purple"
+        case .hazardous: return "maroon"
+        }
     }
 }
 
