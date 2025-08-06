@@ -10,6 +10,8 @@ import Foundation
 // MARK: - Weather Service Protocol
 protocol WeatherServiceProtocol {
     func fetchWeather(for city: String) async throws -> (WeatherResponse, GeocodingResult)
+    // Add the new function to the protocol if you want to mock it for testing
+    func fetchCitySuggestions(for query: String) async throws -> [GeocodingResult]
 }
 
 // MARK: - Weather Service Implementation
@@ -19,14 +21,19 @@ class WeatherService: WeatherServiceProtocol {
     
     func fetchWeather(for city: String) async throws -> (WeatherResponse, GeocodingResult) {
         // First, get coordinates for the city
-        let location = try await geocodeCity(city)
+        let location = try await geocodeCity(city, count: 1).first ?? { throw NetworkError.cityNotFound }()
         let weather = try await fetchWeatherData(latitude: location.latitude, longitude: location.longitude)
         return (weather, location)
     }
+
+    // New function to fetch up to 3 city suggestions
+    func fetchCitySuggestions(for query: String) async throws -> [GeocodingResult] {
+        return try await geocodeCity(query, count: 3)
+    }
     
-    private func geocodeCity(_ city: String) async throws -> GeocodingResult {
+    private func geocodeCity(_ city: String, count: Int) async throws -> [GeocodingResult] {
         let encodedCity = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
-        let urlString = "\(geocodingBaseURL)?name=\(encodedCity)&count=1&language=en&format=json"
+        let urlString = "\(geocodingBaseURL)?name=\(encodedCity)&count=\(count)&language=en&format=json"
         
         guard let url = URL(string: urlString) else {
             throw NetworkError.invalidURL
@@ -35,11 +42,8 @@ class WeatherService: WeatherServiceProtocol {
         let (data, _) = try await URLSession.shared.data(from: url)
         let geocodingResponse = try JSONDecoder().decode(GeocodingResponse.self, from: data)
         
-        guard let location = geocodingResponse.results?.first else {
-            throw NetworkError.cityNotFound
-        }
-        
-        return location
+        // Return the results, or an empty array if nil
+        return geocodingResponse.results ?? []
     }
     
     private func fetchWeatherData(latitude: Double, longitude: Double) async throws -> WeatherResponse {
