@@ -7,21 +7,27 @@
 
 import SwiftUI
 
-// MARK: - Content View
 struct ContentView: View {
     @StateObject private var viewModel = WeatherViewModel()
     @State private var cityName = "London"
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Dynamic background gradient based on weather condition
-                backgroundGradient
-                    .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 1.0), value: viewModel.currentWeatherCondition)
-                
+        ZStack {
+            // Background gradient
+            currentBackgroundGradient
+                .ignoresSafeArea()
+            
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
-                    // Search bar
+                    
+                    // Title
+                    Text("Weatherism")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.top, 40)
+                    
+                    // Search Bar
                     HStack {
                         TextField("Enter city name", text: $cityName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -38,22 +44,30 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
+                    // Content
                     if viewModel.isLoading {
                         ProgressView("Loading weather...")
                             .foregroundColor(.white)
+                            .padding(.top, 40)
+                        
                     } else if viewModel.hasError, let errorMessage = viewModel.errorMessage {
-                        VStack {
+                        VStack(spacing: 10) {
                             Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 60))
+                                .font(.system(size: 50))
                                 .foregroundColor(.red)
                             Text(errorMessage)
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
                         }
-                        .padding()
+                        .padding(.top, 40)
+                        
                     } else if viewModel.hasWeatherData, let weather = viewModel.weatherData {
                         WeatherView(weather: weather, viewModel: viewModel)
+                            .padding(.horizontal)
+                            .padding(.top, 10)
+                        
                     } else {
+                        // Welcome Screen
                         VStack(spacing: 20) {
                             Image(systemName: "cloud.sun")
                                 .font(.system(size: 80))
@@ -64,37 +78,22 @@ struct ContentView: View {
                             Text("Enter a city name to get started")
                                 .foregroundColor(.white.opacity(0.8))
                         }
+                        .padding(.top, 40)
                     }
-                    
-                    Spacer()
                 }
-                .padding()
+                .padding(.bottom, 50) // ruang di bawah untuk scroll
             }
-            .navigationTitle("Weatherism")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        viewModel.refreshWeather()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.white)
-                    }
-                    .disabled(viewModel.isLoading || !viewModel.hasWeatherData)
-                }
-            }
-            .onAppear {
-                viewModel.searchWeather(for: cityName)
-            }
+        }
+        .onAppear {
+            viewModel.searchWeather(for: cityName)
         }
     }
     
-    // MARK: - Computed Properties
-    private var backgroundGradient: LinearGradient {
+    // Background gradient
+    private var currentBackgroundGradient: LinearGradient {
         if viewModel.hasWeatherData {
             return viewModel.currentWeatherCondition.backgroundGradient
         } else {
-            // Default gradient when no weather data
             return LinearGradient(
                 gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.4)]),
                 startPoint: .topLeading,
@@ -104,7 +103,6 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Preview
 #Preview {
     ContentView()
 }

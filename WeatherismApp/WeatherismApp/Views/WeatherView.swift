@@ -7,13 +7,19 @@
 
 import SwiftUI
 
-// MARK: - Weather View
 struct WeatherView: View {
     let weather: WeatherResponse
     let viewModel: WeatherViewModel
     
+    @StateObject private var outfitVM = OutfitViewModel(
+        service: UnsplashService(
+            accessKey: "xcMjf1Uq7Y0KL52y7GFm53H6kYEKZg1CgS4tc_rOihE"
+        )
+    )
+    
     var body: some View {
         VStack(spacing: 20) {
+            
             // Location
             HStack {
                 Image(systemName: "location")
@@ -23,7 +29,7 @@ struct WeatherView: View {
                     .foregroundColor(.white)
             }
             
-            // Weather icon and description
+            // Weather Icon & Description
             VStack(spacing: 10) {
                 Image(systemName: viewModel.weatherIconName(for: weather.current.weatherCode))
                     .font(.system(size: 80))
@@ -45,41 +51,34 @@ struct WeatherView: View {
                     .foregroundColor(.white.opacity(0.8))
             }
             
-            // Weather details
+            // Weather Details
             HStack(spacing: 20) {
-                WeatherDetailView(
-                    icon: "thermometer.low",
-                    title: "Min",
-                    value: "\(Int(weather.daily.temperature2mMin.first ?? 0))°C"
-                )
+                WeatherDetailView(icon: "thermometer.low", title: "Min",
+                                  value: "\(Int(weather.daily.temperature2mMin.first ?? 0))°C")
                 
-                WeatherDetailView(
-                    icon: "thermometer.high",
-                    title: "Max",
-                    value: "\(Int(weather.daily.temperature2mMax.first ?? 0))°C"
-                )
+                WeatherDetailView(icon: "thermometer.high", title: "Max",
+                                  value: "\(Int(weather.daily.temperature2mMax.first ?? 0))°C")
                 
-                WeatherDetailView(
-                    icon: "humidity",
-                    title: "Humidity",
-                    value: "\(weather.current.relativeHumidity2m)%"
-                )
+                WeatherDetailView(icon: "humidity", title: "Humidity",
+                                  value: "\(weather.current.relativeHumidity2m)%")
                 
-                WeatherDetailView(
-                    icon: "wind",
-                    title: "Wind",
-                    value: "\(String(format: "%.1f", weather.current.windSpeed10m)) km/h"
-                )
+                WeatherDetailView(icon: "wind", title: "Wind",
+                                  value: "\(String(format: "%.1f", weather.current.windSpeed10m)) km/h")
             }
             .padding()
             .background(Color.white.opacity(0.2))
             .cornerRadius(15)
+            
+            // Outfit Recommendations
+            OutfitListView(viewModel: outfitVM, condition: viewModel.currentWeatherCondition)
         }
-        .padding()
+        .onAppear {
+            outfitVM.loadOutfits(for: viewModel.currentWeatherCondition)
+        }
     }
 }
 
-// MARK: - Weather Detail View
+
 struct WeatherDetailView: View {
     let icon: String
     let title: String
@@ -102,6 +101,8 @@ struct WeatherDetailView: View {
         }
     }
 }
+
+
 
 // MARK: - Preview
 #Preview("Sunny Weather") {
